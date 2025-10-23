@@ -1,0 +1,5 @@
+{
+  "name": "Specification Architect AI",
+  "description": "An AI agent that generates a complete set of interconnected software specification documents (blueprint, requirements, design, tasks, and validation) through a phased, user-approved process.",
+  "requestFramePermissions": []
+}
