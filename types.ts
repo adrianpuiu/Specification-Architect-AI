@@ -1,4 +1,3 @@
-
 import type { Chat } from '@google/genai';
 
 export enum Phase {
@@ -36,7 +35,22 @@ export interface ChatState {
     isLoading: boolean;
     currentPhase: Phase;
     documents: Documents;
-    activeDocument: DocumentName | null;
+    activeDocument: DocumentName;
     isThinkingMode: boolean;
     error: string | null;
+    isEditing: Record<DocumentName, boolean>;
 }
+
+export type Action =
+  | { type: 'SET_CHAT'; payload: Chat }
+  | { type: 'ADD_MESSAGE'; payload: Message }
+  | { type: 'STREAM_UPDATE'; payload: string }
+  | { type: 'STREAM_COMPLETE'; payload: { content: string; sources?: GroundingChunk[] } }
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_PHASE'; payload: Phase }
+  | { type: 'SET_DOCUMENT'; payload: { docName: DocumentName; content: string } }
+  | { type: 'SET_ACTIVE_DOCUMENT'; payload: DocumentName }
+  | { type: 'SET_THINKING_MODE'; payload: boolean }
+  | { type: 'SET_ERROR'; payload: string | null }
+  | { type: 'TOGGLE_EDITING'; payload: DocumentName }
+  | { type: 'UPDATE_DOCUMENT_CONTENT', payload: { docName: DocumentName, content: string }};

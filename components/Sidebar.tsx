@@ -4,6 +4,7 @@ import { DOC_NAMES, PHASE_CONFIG } from '../constants';
 import { DocumentIcon, DownloadIcon } from './icons';
 import DownloadAllButton from './DownloadAllButton';
 import { downloadFile } from '../utils';
+import PhaseTracker from './PhaseTracker';
 
 interface SidebarProps {
     currentPhase: Phase;
@@ -26,10 +27,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPhase, activeDocument, onSelec
             </div>
             
             <div className="mb-8">
-                <h2 className="text-xs font-semibold uppercase text-gray-400 mb-2">Current Phase</h2>
-                <div className="p-3 bg-gray-800 rounded-lg text-center border border-gray-700">
-                    <p className="font-semibold text-cyan-500">{PHASE_CONFIG[currentPhase].title}</p>
-                </div>
+                 <h2 className="text-xs font-semibold uppercase text-gray-400 mb-3">Progress</h2>
+                 <PhaseTracker currentPhase={currentPhase} />
             </div>
 
             <nav className="flex-grow">

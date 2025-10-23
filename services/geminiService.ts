@@ -1,5 +1,4 @@
-
-import { GoogleGenAI, Chat, GenerateContentResponse, GenerateContentParameters } from "@google/genai";
+import { GoogleGenAI, Chat, GenerateContentParameters } from "@google/genai";
 import { INITIAL_SYSTEM_PROMPT } from '../constants';
 import { Phase } from "../types";
 
@@ -25,7 +24,7 @@ export function initChat(): Chat {
     });
 }
 
-export async function continueChat(chat: Chat, message: string, isThinkingMode: boolean, phase: Phase): Promise<GenerateContentResponse> {
+export async function continueChatStream(chat: Chat, message: string, isThinkingMode: boolean, phase: Phase) {
     try {
         const config: GenerateContentParameters['config'] = isThinkingMode ? { thinkingConfig: { thinkingBudget: 24576 } } : {};
         
@@ -33,14 +32,14 @@ export async function continueChat(chat: Chat, message: string, isThinkingMode: 
             config.tools = [{googleSearch: {}}];
         }
 
-        const result = await chat.sendMessage({
+        const result = await chat.sendMessageStream({
             message,
             config
         });
         
         return result;
     } catch (error) {
-        console.error("Error in continueChat:", error);
+        console.error("Error in continueChatStream:", error);
         throw error;
     }
 }
