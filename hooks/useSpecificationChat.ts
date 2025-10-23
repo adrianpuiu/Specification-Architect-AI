@@ -1,5 +1,5 @@
 import { useReducer, useEffect, useCallback } from 'react';
-import type { Chat } from '@google/genai';
+import type { Chat, GenerateContentResponse } from '@google/genai';
 import type { GroundingChunk } from '../types';
 import { initChat, continueChatStream } from '../services/geminiService';
 import { Phase, type Action, type ChatState, type DocumentName } from '../types';
@@ -84,7 +84,7 @@ export const useSpecificationChat = () => {
         dispatch({ type: 'SET_CHAT', payload: chatInstance });
         dispatch({
             type: 'ADD_MESSAGE',
-            payload: { role: 'model', content: "Welcome! Describe the application or system you want to build. For complex projects, ensure 'Thinking Mode' is enabled for best results." }
+            payload: { role: 'model', content: "Welcome! Describe the application or system you want to build. The first phase of our process will use Google Search to research up-to-date technologies and patterns for your project. For complex projects, ensure 'Thinking Mode' is enabled for best results." }
         });
         dispatch({ type: 'SET_LOADING', payload: false });
     }, []);
@@ -137,16 +137,18 @@ export const useSpecificationChat = () => {
 
         try {
             const phasePrompt = PHASE_PROMPTS[phase];
-            const responseStream = await continueChatStream(chat, phasePrompt, isThinkingMode, phase);
+            const result = await continueChatStream(chat, phasePrompt, isThinkingMode, phase);
             
             let fullText = '';
-            for await (const chunk of responseStream) {
+            let finalChunk: GenerateContentResponse | null = null;
+            for await (const chunk of result) {
                 const chunkText = chunk.text;
                 fullText += chunkText;
                 dispatch({ type: 'STREAM_UPDATE', payload: chunkText });
+                finalChunk = chunk;
             }
             
-            const sources = responseStream.candidates?.[0]?.groundingMetadata?.groundingChunks as GroundingChunk[] | undefined;
+            const sources = finalChunk?.candidates?.[0]?.groundingMetadata?.groundingChunks as GroundingChunk[] | undefined;
             const { displayMessage, approvalGateFound } = processResponseText(fullText, phase);
 
             dispatch({ type: 'STREAM_COMPLETE', payload: { content: displayMessage, sources } });
@@ -170,6 +172,10 @@ export const useSpecificationChat = () => {
 
         const phaseForPrompt = currentPhase === Phase.INITIAL ? Phase.RESEARCH : currentPhase;
         
+        if (phaseForPrompt !== currentPhase) {
+            dispatch({ type: 'SET_PHASE', payload: phaseForPrompt });
+        }
+        
         const docsContext = DOC_NAMES
             .map(docName => state.documents[docName] ? `<<<${docName}.md>>>\n${state.documents[docName]}\n<<</${docName}.md>>>` : '')
             .join('\n\n');
@@ -178,16 +184,18 @@ export const useSpecificationChat = () => {
         const fullPrompt = `${docsContext}\n\n${phasePrompt}\n\nUser request: "${content}"`;
 
         try {
-            const responseStream = await continueChatStream(chat, fullPrompt, isThinkingMode, phaseForPrompt);
+            const result = await continueChatStream(chat, fullPrompt, isThinkingMode, phaseForPrompt);
             
             let fullText = '';
-            for await (const chunk of responseStream) {
+            let finalChunk: GenerateContentResponse | null = null;
+            for await (const chunk of result) {
                 const chunkText = chunk.text;
                 fullText += chunkText;
                 dispatch({ type: 'STREAM_UPDATE', payload: chunkText });
+                finalChunk = chunk;
             }
             
-            const sources = responseStream.candidates?.[0]?.groundingMetadata?.groundingChunks as GroundingChunk[] | undefined;
+            const sources = finalChunk?.candidates?.[0]?.groundingMetadata?.groundingChunks as GroundingChunk[] | undefined;
             const { displayMessage, approvalGateFound } = processResponseText(fullText, phaseForPrompt);
             
             dispatch({ type: 'STREAM_COMPLETE', payload: { content: displayMessage, sources } });

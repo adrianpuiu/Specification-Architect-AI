@@ -86,7 +86,9 @@ const App: React.FC = () => {
                                         <BotIcon className="h-8 w-8 text-cyan-500 flex-shrink-0 mt-1"/>
                                         <div className="max-w-2xl p-4 rounded-xl bg-gray-800 flex items-center space-x-3">
                                             <LoadingSpinner/>
-                                            <span className="text-gray-400">Generating...</span>
+                                            <span className="text-gray-400">{
+                                                currentPhase === Phase.RESEARCH ? 'Researching with Google Search...' : 'Generating...'
+                                            }</span>
                                         </div>
                                     </div>
                                 )}
